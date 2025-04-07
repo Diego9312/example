@@ -22,6 +22,7 @@ export default function TabLayout() {
       {[
         { name: 'index', title: 'Tab One', icon: 'home' }, // Ícone substituído por 'home'
         { name: 'two', title: 'Tab Two', icon: 'home' },  // Ícone substituído por 'home'
+       { name: 'three', title: 'Tab Three', icon: 'home' },  // Ícone substituído por 'home'
       ].map(({ name, title, icon }) => (
         <Tabs.Screen
           key={name}
