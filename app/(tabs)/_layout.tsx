@@ -21,7 +21,9 @@ export default function TabLayout() {
     <Tabs screenOptions={{ tabBarActiveTintColor: activeTintColor, headerShown }}>
       {[
         { name: 'index', title: 'Tab One', icon: 'home' }, // Ícone substituído por 'home'
-        { name: 'two', title: 'Tab Two', icon: 'home' },  // Ícone substituído por 'home'
+        { name: 'two', title: 'Tab Two', icon: 'home' }, 
+        { name: 'three', title: 'Tab Three', icon: 'home' },
+        { name: 'four', title: 'Tab Four', icon: 'home' },   // Ícone substituído por 'home'
       ].map(({ name, title, icon }) => (
         <Tabs.Screen
           key={name}
