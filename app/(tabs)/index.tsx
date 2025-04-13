@@ -1,4 +1,4 @@
-import LoginScreen from "./login"; // Certifique-se de que o caminho está correto
+import LoginScreen from "../login"; 
 
 export default LoginScreen;
 

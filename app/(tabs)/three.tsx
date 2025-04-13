@@ -1,106 +1,215 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  FlatList,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type Afericao = {
+  dataHora: string;
+  glicemia: string;
+  pressao: string;
+};
 
 const diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function WeeklyRegister() {
-  const [dados, setDados] = useState(
-    diasDaSemana.reduce((acc, dia) => {
-      acc[dia] = { glicemia: "", pressao: "" };
-      return acc;
-    }, {} as Record<string, { glicemia: string; pressao: string }>)
-  );
+  const [registros, setRegistros] = useState<Record<string, Afericao[]>>({});
+  const [glicemia, setGlicemia] = useState("");
+  const [pressao, setPressao] = useState("");
+  const [diaSelecionado, setDiaSelecionado] = useState(getDiaHoje());
 
-  const handleChange = (dia: string, campo: "glicemia" | "pressao", valor: string) => {
-    setDados((prev) => ({
-      ...prev,
-      [dia]: {
-        ...prev[dia],
-        [campo]: valor,
-      },
-    }));
-  };
+  function getDiaHoje() {
+    const diaIndex = new Date().getDay();
+    return diasDaSemana[diaIndex];
+  }
 
-  const salvarDados = async () => {
-    const hoje = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
-    try {
-      const registrosExistentes = JSON.parse((await AsyncStorage.getItem("registros")) || "{}");
-      await AsyncStorage.setItem("registros", JSON.stringify({ ...registrosExistentes, [hoje]: dados }));
-      Alert.alert("Sucesso", "Dados salvos com sucesso!");
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível salvar os dados.");
+  useEffect(() => {
+    AsyncStorage.getItem("afericoes").then((data) => {
+      if (data) {
+        setRegistros(JSON.parse(data));
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem("afericoes", JSON.stringify(registros));
+  }, [registros]);
+
+  const adicionarAfericao = () => {
+    if (!glicemia || !pressao) {
+      Alert.alert("Preencha todos os campos.");
+      return;
     }
+
+    const novaAfericao: Afericao = {
+      dataHora: new Date().toLocaleString("pt-BR"),
+      glicemia,
+      pressao,
+    };
+
+    setRegistros((prev) => {
+      const afericoesDia = prev[diaSelecionado] || [];
+      if (afericoesDia.length >= 10) {
+        Alert.alert("Limite de 10 aferições atingido para o dia.");
+        return prev;
+      }
+      return {
+        ...prev,
+        [diaSelecionado]: [...afericoesDia, novaAfericao],
+      };
+    });
+
+    setGlicemia("");
+    setPressao("");
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Registros Semanais</Text>
-      {diasDaSemana.map((dia) => (
-        <View key={dia} style={styles.dayContainer}>
-          <Text style={styles.dayTitle}>{dia}</Text>
-          <TextInput
-            placeholder="Glicemia"
-            style={styles.input}
-            keyboardType="numeric"
-            value={dados[dia].glicemia}
-            onChangeText={(valor) => handleChange(dia, "glicemia", valor)}
-          />
-          <TextInput
-            placeholder="Pressão"
-            style={styles.input}
-            keyboardType="numeric"
-            value={dados[dia].pressao}
-            onChangeText={(valor) => handleChange(dia, "pressao", valor)}
-          />
-        </View>
-      ))}
-      <TouchableOpacity style={styles.button} onPress={salvarDados}>
-        <Text style={styles.buttonText}>Salvar Registros</Text>
+      <Text style={styles.titulo}>Registro Semanal de Aferições</Text>
+
+      <View style={styles.diasContainer}>
+        {diasDaSemana.map((dia) => (
+          <TouchableOpacity
+            key={dia}
+            style={[
+              styles.diaBotao,
+              dia === diaSelecionado && styles.diaSelecionado,
+            ]}
+            onPress={() => setDiaSelecionado(dia)}
+          >
+            <Text
+              style={[
+                styles.diaTexto,
+                dia === diaSelecionado && styles.diaTextoSelecionado,
+              ]}
+            >
+              {dia}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Glicemia (ex: 100)"
+        keyboardType="numeric"
+        value={glicemia}
+        onChangeText={setGlicemia}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Pressão arterial (ex: 12.0/8.0)"
+        value={pressao}
+        onChangeText={setPressao}
+      />
+
+      <TouchableOpacity style={styles.botao} onPress={adicionarAfericao}>
+        <Text style={styles.botaoTexto}>Salvar Aferição</Text>
       </TouchableOpacity>
+
+      <Text style={styles.subtitulo}>Aferições de {diaSelecionado}:</Text>
+      {registros[diaSelecionado]?.length ? (
+        <FlatList
+          data={registros[diaSelecionado]}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.afericaoItem}>
+              <Text style={styles.afericaoTexto}>📅 {item.dataHora}</Text>
+              <Text style={styles.afericaoTexto}>🩸 Glicemia: {item.glicemia}</Text>
+              <Text style={styles.afericaoTexto}>💓 Pressão: {item.pressao}</Text>
+            </View>
+          )}
+        />
+      ) : (
+        <Text style={{ marginTop: 10, fontStyle: "italic" }}>
+          Nenhuma aferição registrada ainda.
+        </Text>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
+    backgroundColor: "#F5F5F5",
+    flexGrow: 1,
   },
-  title: {
+  titulo: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
   },
-  dayContainer: {
-    marginBottom: 15,
-    backgroundColor: "#f5f5f5",
-    padding: 10,
-    borderRadius: 8,
+  diasContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 16,
+    flexWrap: "wrap",
   },
-  dayTitle: {
+  diaBotao: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#E0E0E0",
+    margin: 4,
+  },
+  diaSelecionado: {
+    backgroundColor: "#4CAF50", // VERDE
+  },
+  diaTexto: {
     fontSize: 16,
+    color: "#333",
+  },
+  diaTextoSelecionado: {
+    color: "#FFF",
     fontWeight: "bold",
-    marginBottom: 5,
   },
   input: {
-    backgroundColor: "#fff",
-    padding: 10,
-    marginBottom: 8,
-    borderRadius: 6,
-    borderColor: "#ccc",
+    backgroundColor: "#FFF",
     borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
   },
-  button: {
-    backgroundColor: "#28a745",
-    padding: 15,
+  botao: {
+    backgroundColor: "#4CAF50", // VERDE
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
+    marginBottom: 20,
   },
-  buttonText: {
-    color: "#fff",
+  botaoTexto: {
+    color: "#FFF",
+    fontSize: 16,
     fontWeight: "bold",
   },
+  subtitulo: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  afericaoItem: {
+    backgroundColor: "#FFF",
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 8,
+    borderLeftWidth: 5,
+    borderLeftColor: "#4CAF50", // VERDE
+  },
+  afericaoTexto: {
+    fontSize: 15,
+    marginBottom: 4,
+  },
 });
+
+
+

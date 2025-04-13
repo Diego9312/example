@@ -1,20 +1,14 @@
+import { View, Text, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
 
 export default function ModalScreen() {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
   return (
     <View style={[styles.container, { paddingHorizontal: isLargeScreen ? 40 : 20 }]}>
       <Text style={[styles.title, isLargeScreen && styles.largeTitle]}>Modal</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/modal.tsx" />
-
-      {/* Ajuste da status bar para iOS */}
+      <View style={styles.separator} />
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
     </View>
   );
@@ -39,5 +33,6 @@ const styles = StyleSheet.create({
     marginVertical: 30,
     height: 1,
     width: '80%',
+    backgroundColor: '#ccc',
   },
 });

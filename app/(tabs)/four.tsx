@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, Modal, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -52,39 +52,46 @@ export default function Four() {
   };
 
   return (
-    <View style={styles.container}>
-      <Calendar
-        onDayPress={(day: { dateString: string; }) => abrirModal(day.dateString)}
-        markedDates={{
-          ...Object.keys(dataSalva).reduce((acc, date) => {
-            acc[date] = { marked: true, dotColor: 'blue' };
-            return acc;
-          }, {} as any),
-          [selectedDate]: { selected: true, selectedColor: 'orange' },
-        }}
-      />
-
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modal}>
-          <Text style={styles.title}>Dados para {selectedDate}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Glicemia"
-            keyboardType="numeric"
-            value={glicemia}
-            onChangeText={setGlicemia}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.calendarContainer}>
+          <Calendar
+            onDayPress={(day: { dateString: string; }) => abrirModal(day.dateString)}
+            markedDates={{
+              ...Object.keys(dataSalva).reduce((acc, date) => {
+                acc[date] = { marked: true, dotColor: 'blue' };
+                return acc;
+              }, {} as any),
+              [selectedDate]: { selected: true, selectedColor: 'orange' },
+            }}
+            style={{ width: 320 }}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Pressão Arterial"
-            keyboardType="numeric"
-            value={pressao}
-            onChangeText={setPressao}
-          />
-          <Button title="Salvar" onPress={salvarDados} />
         </View>
-      </Modal>
-    </View>
+
+        <Modal visible={modalVisible} animationType="fade" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modal}>
+              <Text style={styles.title}>Dados para {selectedDate}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Glicemia"
+                keyboardType="numeric"
+                value={glicemia}
+                onChangeText={setGlicemia}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Pressão Arterial"
+                keyboardType="numeric"
+                value={pressao}
+                onChangeText={setPressao}
+              />
+              <Button title="Salvar" onPress={salvarDados} />
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -93,27 +100,44 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60,
     paddingHorizontal: 20,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  calendarContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modal: {
-    marginTop: 100,
+    width: '85%',
     backgroundColor: 'white',
-    marginHorizontal: 20,
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
+    borderRadius: 12,
+    padding: 25,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 20,
+    marginBottom: 15,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#333',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    marginVertical: 8,
-    padding: 10,
-    borderRadius: 5,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
   },
 });
 
