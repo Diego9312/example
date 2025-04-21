@@ -20,17 +20,18 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: activeTintColor, headerShown }}>
       {[
-        { name: 'index', title: 'Tab One', icon: 'home' }, // Ícone substituído por 'home'
-        { name: 'two', title: 'Tab Two', icon: 'home' }, 
+        { name: 'index', title: 'Tab One', icon: 'home' },
+        { name: 'two', title: 'Tab Two', icon: 'home' },
         { name: 'three', title: 'Tab Three', icon: 'home' },
-        { name: 'four', title: 'Tab Four', icon: 'home' },   // Ícone substituído por 'home'
+        { name: 'four', title: 'Tab Four', icon: 'home' },
+        { name: 'six', title: 'Tab Six', icon: 'home' }, // ← nova aba adicionada aqui
       ].map(({ name, title, icon }) => (
         <Tabs.Screen
           key={name}
           name={name}
           options={{
             title,
-            tabBarIcon: ({ color }) => <TabBarIcon name={"medkit"} color={"#8ee8a6"} />,
+            tabBarIcon: ({ color }) => <TabBarIcon name="medkit" color="#8ee8a6" />,
             ...(name === 'index' && {
               headerRight: () => (
                 <Link href="/modal" asChild>
